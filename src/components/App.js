@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import api from "../utils/api.js";
 import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Header from "./Header.js";
 import Main from "./Main.js";
 import Footer from "./Footer.js";
-import PopupWithForm from "./PopupWithForm.js";
 import ImagePopup from "./ImagePopup.js";
 import EditProfilePopup from "./EditProfilePopup.js";
 import EditAvatarPopup from "./EditAvatarPopup.js";
 import AddPlacePopup from "./AddPlacePopup.js";
 import PopupWithConfirmation from "./PopupWithConfirmation.js";
+import ProtectedRoute from "./ProtectedRoute.js";
+import Login from "./Login.js";
+import Register from "./Register.js";
 
 function App() {
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
@@ -27,6 +35,7 @@ function App() {
     avatar: "",
   });
   const [formValid, setFormValid] = useState(false);
+  const [loggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     api
@@ -212,19 +221,43 @@ function App() {
     setSelectedCard(null);
   };
 
+  const handleLogin = () => {};
+
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header />
-        <Main
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onEditAvatar={handleEditAvatarClick}
-          onCardClick={handleCardClick}
-          cards={cards}
-          onCardLike={handleCardLike}
-          onCardDelete={handleCardDelete}
-        />
+        <Header loggedIn={loggedIn} />
+        <Router>
+          <Routes>
+            <Route
+              path="/sign-in"
+              element={<Login handleLogin={handleLogin} />}
+            />
+            <Route path="/sign-up" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute loggedIn={loggedIn} redirectTo={"./sign-in"}>
+                  <Main
+                    onEditProfile={handleEditProfileClick}
+                    onAddPlace={handleAddPlaceClick}
+                    onEditAvatar={handleEditAvatarClick}
+                    onCardClick={handleCardClick}
+                    cards={cards}
+                    onCardLike={handleCardLike}
+                    onCardDelete={handleCardDelete}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/*"
+              element={
+                loggedIn ? <Navigate to={"/"} /> : <Navigate to={"./sign-in"} />
+              }
+            />
+          </Routes>
+        </Router>
         <EditProfilePopup
           isOpen={isEditProfilePopupOpen}
           onClose={closeAllPopups}
