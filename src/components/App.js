@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api, auth } from "../utils/api.js";
 import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useFormValidation } from "../customHooks/useFormValidation.js";
 import Header from "./Header.js";
 import Main from "./Main.js";
 import Footer from "./Footer.js";
@@ -25,16 +26,12 @@ function App() {
   const [cardForDelete, setCardForDelete] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [cards, setCards] = useState([]);
-  const [formErrors, setFormErrors] = useState({
-    name: "",
-    about: "",
-    link: "",
-    avatar: "",
-  });
-  const [formValid, setFormValid] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [email, setEmail] = useState("");
   const [isAuthSuccesfull, setIsAuthSuccesfull] = useState(false);
+
+  const { formErrors, formValid, setFormValid, validateField, clearErrors } =
+    useFormValidation();
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -58,19 +55,6 @@ function App() {
   useEffect(() => {
     setFormValid(!Object.values(formErrors).some((item) => item !== ""));
   }, [formErrors]);
-
-  useEffect(() => {
-    tokenCheck();
-  }, [localStorage.getItem("jwt")]);
-
-  const clearErrors = () => {
-    for (let key in formErrors) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [key]: "",
-      }));
-    }
-  };
 
   const handleEditAvatarClick = () => {
     setIsEditAvatarPopupOpen(true);
@@ -179,21 +163,9 @@ function App() {
           console.log("Неизвестная ошибка");
         }
       })
-      .then(() => {
-        tokenCheck();
-      })
       .catch((err) => {
         console.log(err);
-        if (err.status === 400) {
-          console.log("не передано одно из полей");
-          return;
-        } else if (err.status === 401) {
-          console.log("пользователь с email не найден");
-          return;
-        } else {
-          console.log("Неизвестная ошибка");
-          return;
-        }
+        showAuthError();
       });
   };
 
@@ -208,12 +180,6 @@ function App() {
       .catch((err) => {
         console.log(err);
         showAuthError();
-        if (err.status === 400) {
-          console.log("некорректно заполнено одно из полей");
-          return;
-        } else {
-          console.log("Неизвестная ошибка");
-        }
       });
   };
 
@@ -246,101 +212,11 @@ function App() {
     navigate("/sign-in");
   };
 
-  const validateField = (field, value) => {
-    if (value == 0) setFormValid(false);
-    switch (field) {
-      case "name":
-        if (value.length >= 2 && value.length <= 40) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Недопустимое количество символов",
-          }));
-        }
-        break;
-      case "about":
-        if (value.length >= 2 && value.length <= 40) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Недопустимое количество символов",
-          }));
-        }
-        break;
-      case "link":
-        if (value.match(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/i)) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Пожалуйста, введите ссылку на изображение",
-          }));
-        }
-        break;
-      case "avatar":
-        if (value.match(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/i)) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Пожалуйста, введите ссылку на изображение",
-          }));
-        }
-        break;
-      case "email":
-        if (value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i)) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Пожалуйста, введите корректный email",
-          }));
-        }
-        break;
-      case "password":
-        if (
-          value.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/i)
-        ) {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "",
-          }));
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            [field]: "Пожалуйста, введите более сложный пароль",
-          }));
-        }
-        break;
-      default:
-        console.log(
-          "Ошибка! Проверочное поле не совпало ни с одним из условий."
-        );
-        break;
-    }
-  };
-
   const closeAllPopups = () => {
     setIsEditProfilePopupOpen(false);
     setIsAddPlacePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
+    setIsDeleteCardPopupOpen(false);
     setIsInfoToolTipOpen(false);
     setSelectedCard(null);
   };

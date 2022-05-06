@@ -18,7 +18,7 @@ function ImagePopup({ card, onClose }) {
         <img
           src={card ? card.link : ""}
           className="popup__fullscreen-image"
-          alt={card ? "Изображение в полноэкранном режиме" : ""}
+          alt={card ? `${card.name}` : ""}
         />
         <figcaption className="popup__fullscreen-caption">
           {card ? card.name : ""}

@@ -38,6 +38,7 @@ function Register(props) {
         <input
           className="popup__text auth__field"
           name="password"
+          type="password"
           placeholder="Пароль"
           onChange={handleChange}
         />

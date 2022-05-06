@@ -3,23 +3,18 @@ import PopupWithForm from "./PopupWithForm";
 
 function EditAvatarPopup(props) {
   const avatarInputRef = useRef();
-  const [link, setLink] = useState("");
 
   useEffect(() => {
     avatarInputRef.current.value = "";
   }, [props.isOpen]);
 
   function handleChange() {
-    setLink(avatarInputRef.current.value);
-    props.validateField("avatar", link);
+    props.validateField("avatar", avatarInputRef.current.value);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (
-      props.formValid &&
-      link.match(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/i)
-    ) {
+    if (props.formValid) {
       props.onUpdateAvatar({
         avatar: avatarInputRef.current.value,
       });

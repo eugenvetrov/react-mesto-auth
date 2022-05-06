@@ -81,7 +81,15 @@ class Api {
         password: `${user.password}`,
         email: `${user.email}`,
       }),
-    }).then(this._checkResponse);
+    })
+      .then((res) => {
+        if (res.status === 400) {
+          console.log("некорректно заполнено одно из полей");
+          return res;
+        }
+        return res;
+      })
+      .then(this._checkResponse);
   }
 
   authorize(user) {
@@ -92,7 +100,16 @@ class Api {
         password: `${user.password}`,
         email: `${user.email}`,
       }),
-    }).then(this._checkResponse);
+    })
+      .then((res) => {
+        if (res.status === 400) {
+          console.log("не передано одно из полей");
+        } else if (res.status === 401) {
+          console.log("пользователь с email не найден");
+        }
+        return res;
+      })
+      .then(this._checkResponse);
   }
 
   validateUser(token) {

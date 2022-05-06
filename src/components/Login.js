@@ -2,8 +2,8 @@ import { useState } from "react";
 
 function Login(props) {
   const [values, setValues] = useState({
-    name: "",
-    about: "",
+    email: "",
+    password: "",
   });
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -16,13 +16,16 @@ function Login(props) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const isFieldsNotEmpty = Object.values(values).some((item) => item !== "");
-    props.formValid && isFieldsNotEmpty
-      ? props.onLogin({
-          password: values.password,
-          email: values.email,
-        })
-      : alert("Простите! Какое-то из полей заполнено некорректно.");
+    const isSomeFieldEmpty = Object.values(values).some((item) => item == "");
+    if (props.formValid && !isSomeFieldEmpty) {
+      props.onLogin({
+        password: values.password,
+        email: values.email,
+      });
+    }
+    if (isSomeFieldEmpty) alert("Простите! Поля не должны быть пустыми.");
+    if (props.formErrors.email || props.formErrors.password)
+      alert(`${props.formErrors.email} ${props.formErrors.password}`);
   }
   return (
     <div className="auth">
@@ -37,6 +40,7 @@ function Login(props) {
         <input
           className="popup__text auth__field"
           name="password"
+          type="password"
           placeholder="Пароль"
           onChange={handleChange}
         />
