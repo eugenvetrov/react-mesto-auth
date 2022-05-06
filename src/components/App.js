@@ -18,12 +18,14 @@ import PopupWithConfirmation from "./PopupWithConfirmation.js";
 import ProtectedRoute from "./ProtectedRoute.js";
 import Login from "./Login.js";
 import Register from "./Register.js";
+import InfoToolTip from "./InfoToolTip.js";
 
 function App() {
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
   const [isDeleteCardPopupOpen, setIsDeleteCardPopupOpen] = useState(false);
+  const [isInfoToolTipOpen, setIsInfoToolTipOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardForDelete, setCardForDelete] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -35,7 +37,7 @@ function App() {
     avatar: "",
   });
   const [formValid, setFormValid] = useState(false);
-  const [loggedIn, setIsLoggedIn] = useState(false);
+  const [loggedIn, setIsLoggedIn] = useState(true);
 
   useEffect(() => {
     api
@@ -214,10 +216,11 @@ function App() {
     }
   };
 
-  const closeAllPopups = (event) => {
+  const closeAllPopups = () => {
     setIsEditProfilePopupOpen(false);
     setIsAddPlacePopupOpen(false);
     setIsEditAvatarPopupOpen(false);
+    setIsInfoToolTipOpen(false);
     setSelectedCard(null);
   };
 
@@ -295,6 +298,8 @@ function App() {
           onClose={closeAllPopups}
           onSubmit={handleDeleteCard}
         />
+
+        <InfoToolTip isOpen={isInfoToolTipOpen} onClose={closeAllPopups} />
         <Footer />
       </div>
     </CurrentUserContext.Provider>

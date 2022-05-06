@@ -1,6 +1,7 @@
 .page {
     display: flex;
     max-width: 100%;
+    min-height: 100%;
     font-family: "Inter", "Arial ", sans-serif;
     background-color: #000;
     flex-direction: column;
