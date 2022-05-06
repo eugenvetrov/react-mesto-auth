@@ -11,6 +11,11 @@ function Header(props) {
     setIsOpen(!isOpen);
   };
 
+  const handleSignOut = () => {
+    props.signOut();
+    setIsOpen(false);
+  };
+
   return (
     <>
       <Routes>
@@ -58,9 +63,9 @@ function Header(props) {
                     <p className="header__user-email">
                       {props.loggedIn ? props.email : "unknown email"}
                     </p>
-                    <Link to="/sign-in" className="header__link">
+                    <p className="header__link" onClick={handleSignOut}>
                       Выйти
-                    </Link>
+                    </p>
                   </div>
                   <img
                     src={logo}
@@ -98,9 +103,9 @@ function Header(props) {
                   <p className="header__user-email">
                     {props.loggedIn ? props.email : "unknown email"}
                   </p>
-                  <Link to="/sign-in" className="header__link">
+                  <p className="header__link" onClick={handleSignOut}>
                     Выйти
-                  </Link>
+                  </p>
                 </div>
               </header>
             )

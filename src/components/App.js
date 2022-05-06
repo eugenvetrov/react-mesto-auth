@@ -241,6 +241,11 @@ function App() {
     }
   };
 
+  const signOut = () => {
+    localStorage.removeItem("jwt");
+    navigate("/sign-in");
+  };
+
   const validateField = (field, value) => {
     if (value == 0) setFormValid(false);
     switch (field) {
@@ -343,7 +348,7 @@ function App() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header loggedIn={loggedIn} email={email} />
+        <Header loggedIn={loggedIn} email={email} signOut={signOut} />
         <Routes>
           <Route
             path="/sign-in"
