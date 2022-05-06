@@ -72,6 +72,38 @@ class Api {
       body: JSON.stringify({ avatar: `${link}` }),
     }).then(this._checkResponse);
   }
+
+  register(user) {
+    return fetch(`${this._baseUrl}/signup`, {
+      method: "POST",
+      headers: this._headeres,
+      body: JSON.stringify({
+        password: `${user.password}`,
+        email: `${user.email}`,
+      }),
+    }).then(this._checkResponse);
+  }
+
+  authorize(user) {
+    return fetch(`${this._baseUrl}/signin`, {
+      method: "POST",
+      headers: this._headeres,
+      body: JSON.stringify({
+        password: `${user.password}`,
+        email: `${user.email}`,
+      }),
+    }).then(this._checkResponse);
+  }
+
+  validateUser(token) {
+    return fetch(`${this._baseUrl}/users/me`, {
+      method: "GET",
+      headers: {
+        ...this._headers,
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(this._checkResponse);
+  }
 }
 
 const api = new Api({
@@ -82,4 +114,11 @@ const api = new Api({
   },
 });
 
-export default api;
+const auth = new Api({
+  baseUrl: "https://auth.nomoreparties.co",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export { api, auth };

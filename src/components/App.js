@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
-import api from "../utils/api.js";
+import { api, auth } from "../utils/api.js";
 import { CurrentUserContext } from "../contexts/CurrentUserContext.js";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Header from "./Header.js";
 import Main from "./Main.js";
 import Footer from "./Footer.js";
@@ -37,8 +32,11 @@ function App() {
     avatar: "",
   });
   const [formValid, setFormValid] = useState(false);
-  const [loggedIn, setIsLoggedIn] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isAuthSuccesfull, setIsAuthSuccesfull] = useState(false);
 
+  const navigate = useNavigate();
   useEffect(() => {
     api
       .getUserInfo()
@@ -53,11 +51,17 @@ function App() {
       .catch((err) => {
         console.log(err);
       });
+
+    tokenCheck();
   }, []);
 
   useEffect(() => {
     setFormValid(!Object.values(formErrors).some((item) => item !== ""));
   }, [formErrors]);
+
+  useEffect(() => {
+    tokenCheck();
+  }, [localStorage.getItem("jwt")]);
 
   const clearErrors = () => {
     for (let key in formErrors) {
@@ -153,6 +157,90 @@ function App() {
       .catch((error) => console.log(error));
   };
 
+  const showAuthOk = () => {
+    setIsAuthSuccesfull(true);
+    setIsInfoToolTipOpen(true);
+  };
+
+  const showAuthError = () => {
+    setIsAuthSuccesfull(false);
+    setIsInfoToolTipOpen(true);
+  };
+
+  const handleLogin = (user) => {
+    auth
+      .authorize(user)
+      .then((res) => {
+        if (res.token) {
+          localStorage.setItem("jwt", res.token);
+          setLoggedIn(true);
+          navigate("/");
+        } else {
+          console.log("Неизвестная ошибка");
+        }
+      })
+      .then(() => {
+        tokenCheck();
+      })
+      .catch((err) => {
+        console.log(err);
+        if (err.status === 400) {
+          console.log("не передано одно из полей");
+          return;
+        } else if (err.status === 401) {
+          console.log("пользователь с email не найден");
+          return;
+        } else {
+          console.log("Неизвестная ошибка");
+          return;
+        }
+      });
+  };
+
+  const handleRegister = (user) => {
+    auth
+      .register(user)
+      .then((res) => {
+        setEmail(res.data.email);
+        showAuthOk();
+        navigate("/sign-in");
+      })
+      .catch((err) => {
+        console.log(err);
+        showAuthError();
+        if (err.status === 400) {
+          console.log("некорректно заполнено одно из полей");
+          return;
+        } else {
+          console.log("Неизвестная ошибка");
+        }
+      });
+  };
+
+  const tokenCheck = () => {
+    if (localStorage.getItem("jwt")) {
+      const jwt = localStorage.getItem("jwt");
+      auth
+        .validateUser(jwt)
+        .then((res) => {
+          setLoggedIn(true);
+          setEmail(res.data.email);
+          navigate("/");
+        })
+        .catch((err) => {
+          if (err.status === 400) {
+            console.log("Токен не передан или передан не в том формате");
+          } else if (err.status === 401) {
+            console.log("Переданный токен некорректен");
+          }
+          console.log(err);
+        });
+    } else {
+      setLoggedIn(false);
+      setEmail("");
+    }
+  };
+
   const validateField = (field, value) => {
     if (value == 0) setFormValid(false);
     switch (field) {
@@ -208,6 +296,34 @@ function App() {
           }));
         }
         break;
+      case "email":
+        if (value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i)) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [field]: "",
+          }));
+        } else {
+          setFormErrors((prev) => ({
+            ...prev,
+            [field]: "Пожалуйста, введите корректный email",
+          }));
+        }
+        break;
+      case "password":
+        if (
+          value.match(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/i)
+        ) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [field]: "",
+          }));
+        } else {
+          setFormErrors((prev) => ({
+            ...prev,
+            [field]: "Пожалуйста, введите более сложный пароль",
+          }));
+        }
+        break;
       default:
         console.log(
           "Ошибка! Проверочное поле не совпало ни с одним из условий."
@@ -224,43 +340,56 @@ function App() {
     setSelectedCard(null);
   };
 
-  const handleLogin = () => {};
-
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header loggedIn={loggedIn} />
-        <Router>
-          <Routes>
-            <Route
-              path="/sign-in"
-              element={<Login handleLogin={handleLogin} />}
-            />
-            <Route path="/sign-up" element={<Register />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute loggedIn={loggedIn} redirectTo={"./sign-in"}>
-                  <Main
-                    onEditProfile={handleEditProfileClick}
-                    onAddPlace={handleAddPlaceClick}
-                    onEditAvatar={handleEditAvatarClick}
-                    onCardClick={handleCardClick}
-                    cards={cards}
-                    onCardLike={handleCardLike}
-                    onCardDelete={handleCardDelete}
-                  />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                loggedIn ? <Navigate to={"/"} /> : <Navigate to={"./sign-in"} />
-              }
-            />
-          </Routes>
-        </Router>
+        <Header loggedIn={loggedIn} email={email} />
+        <Routes>
+          <Route
+            path="/sign-in"
+            element={
+              <Login
+                onLogin={handleLogin}
+                formErrors={formErrors}
+                validateField={validateField}
+                formValid={formValid}
+              />
+            }
+          />
+          <Route
+            path="/sign-up"
+            element={
+              <Register
+                onRegister={handleRegister}
+                formErrors={formErrors}
+                validateField={validateField}
+                formValid={formValid}
+              />
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute loggedIn={loggedIn} redirectTo={"./sign-in"}>
+                <Main
+                  onEditProfile={handleEditProfileClick}
+                  onAddPlace={handleAddPlaceClick}
+                  onEditAvatar={handleEditAvatarClick}
+                  onCardClick={handleCardClick}
+                  cards={cards}
+                  onCardLike={handleCardLike}
+                  onCardDelete={handleCardDelete}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/*"
+            element={
+              loggedIn ? <Navigate to={"/"} /> : <Navigate to={"./sign-in"} />
+            }
+          />
+        </Routes>
         <EditProfilePopup
           isOpen={isEditProfilePopupOpen}
           onClose={closeAllPopups}
@@ -299,7 +428,11 @@ function App() {
           onSubmit={handleDeleteCard}
         />
 
-        <InfoToolTip isOpen={isInfoToolTipOpen} onClose={closeAllPopups} />
+        <InfoToolTip
+          isOpen={isInfoToolTipOpen}
+          onClose={closeAllPopups}
+          isAuthSuccesfull={isAuthSuccesfull}
+        />
         <Footer />
       </div>
     </CurrentUserContext.Provider>

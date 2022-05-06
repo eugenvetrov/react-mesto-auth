@@ -18,10 +18,21 @@ function InfoToolTip(props) {
           type="button"
           onClick={props.onClose}
         ></button>
-        <form className="popup__form popup__form_check-status">
-          <img src={checkOk} className="popup__check-image" />
-          <p className="popup__check-status">Вы успешно зарегестрировались!</p>
-        </form>
+        {props.isAuthSuccesfull ? (
+          <div className="popup__form popup__form_check-status">
+            <img src={checkOk} className="popup__check-image" />
+            <p className="popup__check-status">
+              Вы успешно зарегестрировались!
+            </p>
+          </div>
+        ) : (
+          <div className="popup__form popup__form_check-status">
+            <img src={checkError} className="popup__check-image" />
+            <p className="popup__check-status">
+              Что-то пошло не так! Попробуйте ещё раз.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
