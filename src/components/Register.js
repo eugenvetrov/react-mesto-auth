@@ -3,8 +3,8 @@ import { useState } from "react";
 
 function Register(props) {
   const [values, setValues] = useState({
-    name: "",
-    about: "",
+    email: "",
+    password: "",
   });
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -17,13 +17,17 @@ function Register(props) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const isFieldsNotEmpty = Object.values(values).some((item) => item !== "");
-    props.formValid && isFieldsNotEmpty
-      ? props.onRegister({
-          password: values.password,
-          email: values.email,
-        })
-      : alert("Простите! Какое-то из полей заполнено некорректно.");
+    const isSomeFieldEmpty = Object.values(values).some((item) => item == "");
+    if (props.formValid && !isSomeFieldEmpty) {
+      props.onRegister({
+        password: values.password,
+        email: values.email,
+      });
+    }
+    console.log(values);
+    if (isSomeFieldEmpty) alert("Простите! Поля не должны быть пустыми.");
+    if (props.formErrors.email || props.formErrors.password)
+      alert(`${props.formErrors.email} ${props.formErrors.password}`);
   }
   return (
     <div className="auth">
